@@ -1,0 +1,11 @@
+.env.local
+.env.*.local
+node_modules/
+dist/
+.npm-cache/
+.next/
+.chrome-test-profile*/
+map-qa*.png
+supabase/migrations/*.sql
+AGENTS.md
+CLAUDE.md
