@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import type { MapShop, MapShopsResponse, ShopWin, ShopWinsResponse } from "../lib/map/types";
 
 const REGIONS = [
@@ -60,6 +61,7 @@ export function LotteryMap() {
   const winsCacheRef = useRef<Map<number, ShopWin[]>>(new Map());
   const userMarkerRef = useRef<any>(null);
   const accuracyCircleRef = useRef<any>(null);
+  const addressMarkerRef = useRef<any>(null);
   const userLocationRef = useRef<Coordinates | null>(null);
   const hasRequestedRef = useRef(false);
   const autoSearchNextIdleRef = useRef(false);
@@ -73,6 +75,8 @@ export function LotteryMap() {
   const [locating, setLocating] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [searchPending, setSearchPending] = useState(false);
+  const [addressQuery, setAddressQuery] = useState("");
+  const [addressSearching, setAddressSearching] = useState(false);
 
   const displayedShops = useMemo(() => {
     if (!userLocation) return shops.map((shop) => ({ shop, distance: null }));
@@ -284,7 +288,7 @@ export function LotteryMap() {
     };
     if (window.naver?.maps) { initialize(); return; }
     const script = document.createElement("script");
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(clientId)}`;
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(clientId)}&submodules=geocoder`;
     script.async = true;
     script.onload = initialize;
     script.onerror = () => setStatus("네이버 지도 스크립트를 불러오지 못했습니다.");
@@ -298,6 +302,7 @@ export function LotteryMap() {
       for (const marker of markersRef.current.values()) marker.setMap(null);
       userMarkerRef.current?.setMap(null);
       accuracyCircleRef.current?.setMap(null);
+      addressMarkerRef.current?.setMap(null);
     };
   }, [loadShops]);
 
@@ -377,14 +382,73 @@ export function LotteryMap() {
     );
   };
 
+  const searchAddress = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = addressQuery.trim();
+    if (!query || addressSearching || !mapRef.current) return;
+    if (!naver.maps.Service?.geocode) {
+      setStatus("주소 검색 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+    setAddressSearching(true);
+    setStatus(`‘${query}’ 주소를 검색하는 중...`);
+    naver.maps.Service.geocode({ query }, (status: any, response: any) => {
+      setAddressSearching(false);
+      if (status !== naver.maps.Service.Status.OK || !response?.v2?.addresses?.length) {
+        setStatus("검색한 주소를 찾지 못했습니다. 도로명이나 지번 주소를 확인해 주세요.");
+        return;
+      }
+      const result = response.v2.addresses[0];
+      const position = new naver.maps.LatLng(Number(result.y), Number(result.x));
+      const resultName = result.roadAddress || result.jibunAddress || query;
+      if (!addressMarkerRef.current) {
+        addressMarkerRef.current = new naver.maps.Marker({
+          map: mapRef.current,
+          position,
+          title: resultName,
+          zIndex: 900,
+        });
+      } else {
+        addressMarkerRef.current.setPosition(position);
+        addressMarkerRef.current.setTitle(resultName);
+        addressMarkerRef.current.setMap(mapRef.current);
+      }
+      autoSearchNextIdleRef.current = true;
+      mapRef.current.setZoom(15);
+      mapRef.current.panTo(position);
+      setStatus(`‘${resultName}’ 주변 판매점을 조회합니다.`);
+    });
+  };
+
   return (
     <main className="map-shell">
       <header className="topbar">
         <div><p className="eyebrow">LOTTO PLACE</p><h1>당첨 판매점 지도</h1></div>
         <div className="controls">
+          <form className="address-search" onSubmit={searchAddress}>
+            <input
+              type="search"
+              value={addressQuery}
+              onChange={(event) => setAddressQuery(event.target.value)}
+              placeholder="도로명 또는 지번 주소"
+              aria-label="주소 검색"
+            />
+            <button type="submit" disabled={!mapReady || addressSearching || !addressQuery.trim()}>
+              {addressSearching ? "검색 중" : "검색"}
+            </button>
+          </form>
           <select aria-label="지역 선택" defaultValue="서울" onChange={(event) => moveRegion(event.target.value)}>
             {REGIONS.map(([name]) => <option key={name}>{name}</option>)}
           </select>
+          <button
+            type="button"
+            className="header-location-button"
+            onClick={moveToCurrentLocation}
+            disabled={!mapReady || locating}
+            aria-label="현재 위치로 이동"
+          >
+            <span aria-hidden="true">◎</span>{locating ? "찾는 중" : "내 위치"}
+          </button>
           <label><input type="checkbox" checked={first} onChange={(event) => setFirst(event.target.checked)} /> 1등</label>
           <label><input type="checkbox" checked={second} onChange={(event) => setSecond(event.target.checked)} /> 2등</label>
         </div>
@@ -416,15 +480,6 @@ export function LotteryMap() {
               이 지역 다시 검색
             </button>
           )}
-          <button
-            type="button"
-            className="current-location-button"
-            onClick={moveToCurrentLocation}
-            disabled={!mapReady || locating}
-            aria-label="현재 위치로 이동"
-          >
-            <span aria-hidden="true">◎</span>{locating ? "찾는 중" : "내 위치"}
-          </button>
         </div>
       </section>
     </main>
