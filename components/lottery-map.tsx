@@ -101,7 +101,12 @@ export function LotteryMap() {
       routeParams.set("slng", String(current.lng));
       routeParams.set("sname", "현재 위치");
     }
-    const directionsUrl = `nmap://route/public?${routeParams.toString()}`;
+    const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const directionsUrl = mobile
+      ? `nmap://route/public?${routeParams.toString()}`
+      : `https://map.naver.com/p/search/${encodeURIComponent(shop.address)}`;
+    const directionsAttributes = mobile ? "" : ' target="_blank" rel="noopener noreferrer"';
+    const directionsLabel = mobile ? "네이버 지도 길찾기" : "네이버 지도에서 보기";
     return `
     <div class="map-popup">
       <p>당첨 판매점</p>
@@ -109,7 +114,8 @@ export function LotteryMap() {
       <span>${escapeHtml(shop.address)}</span>
       <div class="map-popup-counts"><b>1등 ${shop.firstWinCount}건</b><b>2등 ${shop.secondWinCount}건</b><em>총 ${shop.totalWinCount}건</em></div>
       ${history}
-      <a class="map-popup-directions" href="${escapeHtml(directionsUrl)}">네이버 지도 길찾기</a>
+      <a class="map-popup-detail" href="/shop/${shop.id}">판매점 상세 정보</a>
+      <a class="map-popup-directions" href="${escapeHtml(directionsUrl)}"${directionsAttributes}>${directionsLabel}</a>
     </div>
   `;
   }, []);
