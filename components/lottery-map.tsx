@@ -55,7 +55,7 @@ export function LotteryMap() {
   const requestRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const filtersRef = useRef({ first: true, second: true });
+  const filtersRef = useRef({ first: true, second: false });
   const selectedRef = useRef<MapShop | null>(null);
   const winsRequestRef = useRef<AbortController | null>(null);
   const winsCacheRef = useRef<Map<number, ShopWin[]>>(new Map());
@@ -70,7 +70,7 @@ export function LotteryMap() {
   const [status, setStatus] = useState("지도를 준비하는 중...");
   const [loading, setLoading] = useState(false);
   const [first, setFirst] = useState(true);
-  const [second, setSecond] = useState(true);
+  const [second, setSecond] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [locating, setLocating] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
@@ -79,14 +79,30 @@ export function LotteryMap() {
   const [addressSearching, setAddressSearching] = useState(false);
 
   const displayedShops = useMemo(() => {
-    if (!userLocation) return shops.map((shop) => ({ shop, distance: null }));
-    return shops
-      .map((shop) => ({
-        shop,
-        distance: distanceKm(userLocation, { lat: shop.lat, lng: shop.lng }),
-      }))
-      .sort((left, right) => left.distance - right.distance);
-  }, [shops, userLocation]);
+    if (userLocation) {
+      return shops
+        .map((shop) => ({
+          shop,
+          distance: distanceKm(userLocation, { lat: shop.lat, lng: shop.lng }),
+        }))
+        .sort((left, right) => left.distance - right.distance);
+    }
+
+    const winCount = (shop: MapShop) => {
+      if (first && second) return shop.totalWinCount;
+      if (first) return shop.firstWinCount;
+      return shop.secondWinCount;
+    };
+
+    return [...shops]
+      .sort((left, right) =>
+        winCount(right) - winCount(left)
+        || right.totalWinCount - left.totalWinCount
+        || (right.lastWinRound ?? 0) - (left.lastWinRound ?? 0)
+        || left.name.localeCompare(right.name, "ko")
+      )
+      .map((shop) => ({ shop, distance: null }));
+  }, [first, second, shops, userLocation]);
 
   const popupContent = useCallback((shop: MapShop, history: string) => {
     const current = userLocationRef.current;
