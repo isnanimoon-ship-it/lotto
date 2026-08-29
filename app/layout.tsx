@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,5 +33,38 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ko"><body>{children}</body></html>;
+  return (
+    <html lang="ko">
+      <body>
+        {children}
+        <Script src="https://wcs.pstatic.net/wcslog.js" strategy="afterInteractive" />
+        <Script id="naver-analytics" strategy="afterInteractive">
+          {`
+            function initializeNaverAnalytics() {
+              if (!window.wcs_add) window.wcs_add = {};
+              window.wcs_add["wa"] = "1aaee28bc70bf40";
+              if (window.wcs) {
+                window.wcs_do();
+              }
+            }
+
+            if (window.wcs) {
+              initializeNaverAnalytics();
+            } else {
+              var naverAnalyticsScript = document.querySelector(
+                'script[src="https://wcs.pstatic.net/wcslog.js"]'
+              );
+              if (naverAnalyticsScript) {
+                naverAnalyticsScript.addEventListener(
+                  "load",
+                  initializeNaverAnalytics,
+                  { once: true }
+                );
+              }
+            }
+          `}
+        </Script>
+      </body>
+    </html>
+  );
 }
