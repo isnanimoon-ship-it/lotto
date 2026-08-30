@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const shopIds = await getShopIds();
   const lastModified = new Date();
   return [{
-    url: `${SITE_URL}/map`,
+    url: `${SITE_URL}/`,
     lastModified,
     changeFrequency: "weekly",
     priority: 1,
