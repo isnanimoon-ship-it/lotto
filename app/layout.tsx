@@ -35,6 +35,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7746620546474816"
+          crossOrigin="anonymous"
+        ></script>
+      </head>
       <body>
         {children}
         <Script src="https://wcs.pstatic.net/wcslog.js" strategy="afterInteractive" />
