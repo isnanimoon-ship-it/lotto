@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchLotteryRound } from "./client.js";
-import { normalizeLotteryRows, type NormalizedShop } from "./normalize.js";
-import { createServerSupabaseClient } from "../supabase/server.js";
+import { fetchLotteryRound } from "./client";
+import { normalizeLotteryRows, type NormalizedShop } from "./normalize";
+import type { LotteryShopResponse } from "./schema";
+import { createServerSupabaseClient } from "../supabase/server";
 
 export type CollectionResult = {
   round: number;
@@ -93,13 +94,20 @@ async function startSyncRun(supabase: SupabaseClient, round: number) {
   return data.id as number;
 }
 
-export async function collectLotteryRound(round: number): Promise<CollectionResult> {
+export type CollectionOptions = {
+  sourceRows?: LotteryShopResponse[];
+};
+
+export async function collectLotteryRound(
+  round: number,
+  options: CollectionOptions = {},
+): Promise<CollectionResult> {
   assertRound(round);
   const supabase = createServerSupabaseClient();
   const syncRunId = await startSyncRun(supabase, round);
 
   try {
-    const sourceRows = await fetchLotteryRound(round);
+    const sourceRows = options.sourceRows ?? await fetchLotteryRound(round);
     const { shops, wins } = normalizeLotteryRows(sourceRows);
     if (sourceRows.length === 0) {
       const finishedAt = new Date().toISOString();

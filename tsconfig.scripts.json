@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "plugins": [],
-    "incremental": false
+    "incremental": false,
+    "noEmit": true
   },
   "include": ["lib/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "dist", "app", "components"]

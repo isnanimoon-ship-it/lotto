@@ -1,4 +1,4 @@
-import { lotteryResponseSchema } from "./schema.js";
+import { lotteryResponseSchema } from "./schema";
 
 const ENDPOINT =
   "https://www.dhlottery.co.kr/wnprchsplcsrch/selectLtWnShp.do";

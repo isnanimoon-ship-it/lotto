@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { createServerSupabaseClient } from "../lib/supabase/server.js";
+import { createServerSupabaseClient } from "../lib/supabase/server";
 
 dotenv.config({ path: ".env.local", override: true, quiet: true });
 

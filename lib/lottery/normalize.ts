@@ -1,4 +1,4 @@
-import type { LotteryShopResponse } from "./schema.js";
+import type { LotteryShopResponse } from "./schema";
 
 export type NormalizedShop = {
   lottery_shop_id: string;

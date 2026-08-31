@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import { collectLotteryRounds } from "../lib/lottery/backfill.js";
-import { createServerSupabaseClient } from "../lib/supabase/server.js";
+import { collectLotteryRounds } from "../lib/lottery/backfill";
+import { createServerSupabaseClient } from "../lib/supabase/server";
 
 dotenv.config({ path: ".env.local", override: true, quiet: true });
 

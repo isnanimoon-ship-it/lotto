@@ -1,4 +1,4 @@
-import { collectLotteryRound, type CollectionResult } from "./collector.js";
+import { collectLotteryRound, type CollectionResult } from "./collector";
 
 export type BackfillRoundResult =
   | { round: number; status: "success"; result: CollectionResult }

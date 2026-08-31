@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { collectLotteryRounds } from "../lib/lottery/backfill.js";
+import { collectLotteryRounds } from "../lib/lottery/backfill";
 
 dotenv.config({ path: ".env.local", override: true, quiet: true });
 

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import dotenv from "dotenv";
-import { collectLotteryRound } from "../lib/lottery/collector.js";
+import { collectLotteryRound } from "../lib/lottery/collector";
 
 dotenv.config({ path: ".env.local", override: true, quiet: true });
 

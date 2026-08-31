@@ -7,11 +7,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build:scripts": "tsc -p tsconfig.scripts.json --outDir dist --noEmit false",
-    "lottery:collect": "npm run build:scripts --silent && node dist/scripts/collect-lottery-round.js",
-    "lottery:backfill": "npm run build:scripts --silent && node dist/scripts/backfill-lottery-rounds.js",
-    "lottery:verify": "npm run build:scripts --silent && node dist/scripts/verify-lottery-round.js",
-    "lottery:verify-backfill": "npm run build:scripts --silent && node dist/scripts/verify-backfill.js",
+    "build:scripts": "tsc -p tsconfig.scripts.json",
+    "lottery:collect": "tsx scripts/collect-lottery-round.ts",
+    "lottery:backfill": "tsx scripts/backfill-lottery-rounds.ts",
+    "lottery:verify": "tsx scripts/verify-lottery-round.ts",
+    "lottery:verify-backfill": "tsx scripts/verify-backfill.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "@types/node": "^26.4.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }
