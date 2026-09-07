@@ -28,9 +28,10 @@ export const metadata: Metadata = {
 const websiteStructuredData = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
   name: "로또 플레이스",
-  alternateName: "Lotto Place",
-  url: SITE_URL,
+  alternateName: ["로또플레이스", "Lotto Place", "lotto.konly.co.kr"],
+  url: `${SITE_URL}/`,
   description: "전국 로또 1등·2등 당첨 판매점과 당첨 이력을 지도에서 확인하는 서비스",
   inLanguage: "ko-KR",
 };

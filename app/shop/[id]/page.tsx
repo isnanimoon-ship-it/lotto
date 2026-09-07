@@ -38,7 +38,14 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
     title,
     description,
     alternates: { canonical: `/shop/${shop.id}` },
-    openGraph: { title, description, url: `/shop/${shop.id}` },
+    openGraph: {
+      title: `${title} | 로또 플레이스`,
+      description,
+      url: `/shop/${shop.id}`,
+      siteName: "로또 플레이스",
+      locale: "ko_KR",
+      type: "website",
+    },
   };
 }
 
@@ -70,7 +77,7 @@ export default async function ShopDetailPage({ params }: ShopPageProps) {
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "당첨 판매점 지도", item: "https://lotto.konly.co.kr/map" },
+          { "@type": "ListItem", position: 1, name: "로또 플레이스", item: "https://lotto.konly.co.kr/" },
           ...(region ? [{ "@type": "ListItem", position: 2, name: `${region.name} 로또 명당`, item: `https://lotto.konly.co.kr/shops/${region.slug}` }] : []),
           { "@type": "ListItem", position: region ? 3 : 2, name },
         ],
@@ -89,7 +96,7 @@ export default async function ShopDetailPage({ params }: ShopPageProps) {
     <main className="shop-detail-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <nav className="shop-breadcrumb" aria-label="현재 위치">
-        <Link href="/map">지도</Link><span>›</span>
+        <Link href="/">로또 플레이스</Link><span>›</span>
         {region && <><Link href={`/shops/${region.slug}`}>{region.name}</Link><span>›</span></>}
         <span aria-current="page">{name}</span>
       </nav>

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Lotto Place winning shop map";
+export const alt = "로또 플레이스 전국 당첨 판매점 지도";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
       </div>
       <div style={{ display: "flex", marginTop: 70, alignItems: "center", gap: 16 }}>
         <div style={{ width: 22, height: 22, borderRadius: 999, background: "#1688f0", border: "5px solid white", boxShadow: "0 3px 12px #1688f066" }} />
-        <div style={{ display: "flex", color: "#0f6b4f", fontSize: 24, fontWeight: 700 }}>lotto.konly.co.kr</div>
+        <div style={{ display: "flex", color: "#0f6b4f", fontSize: 24, fontWeight: 700 }}>로또 플레이스 · lotto.konly.co.kr</div>
       </div>
     </div>,
     size,

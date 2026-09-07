@@ -43,7 +43,14 @@ export async function generateMetadata({ params }: RegionPageProps): Promise<Met
     title,
     description,
     alternates: { canonical: `/shops/${region.slug}` },
-    openGraph: { title, description, url: `/shops/${region.slug}` },
+    openGraph: {
+      title: `${title} | 로또 플레이스`,
+      description,
+      url: `/shops/${region.slug}`,
+      siteName: "로또 플레이스",
+      locale: "ko_KR",
+      type: "website",
+    },
   };
 }
 
@@ -107,7 +114,7 @@ export default async function RegionShopsPage({ params }: RegionPageProps) {
     <main className="region-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <nav className="region-nav" aria-label="주요 페이지">
-        <Link href="/map">← 지도에서 찾기</Link>
+        <Link href="/">← 지도에서 찾기</Link>
       </nav>
       <header className="region-hero">
         <p className="eyebrow">LOTTO PLACE · {region.name.toUpperCase()}</p>

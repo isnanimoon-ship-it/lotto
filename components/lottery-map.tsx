@@ -445,7 +445,7 @@ export function LotteryMap() {
   return (
     <main className="map-shell">
       <header className="topbar">
-        <div><p className="eyebrow">LOTTO PLACE</p><h1>당첨 판매점 지도</h1></div>
+        <div><p className="eyebrow">로또 플레이스 · LOTTO PLACE</p><h1>당첨 판매점 지도</h1></div>
         <div className="controls">
           <form className="address-search" onSubmit={searchAddress}>
             <input
