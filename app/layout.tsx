@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -47,6 +48,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         ></script>
       </head>
       <body>
+        <header className="site-header">
+          <div className="site-header-inner">
+            <Link className="site-brand" href="/" aria-label="로또 플레이스 홈">로또 플레이스</Link>
+            <nav className="site-nav" aria-label="주요 메뉴">
+              <Link href="/">판매점 지도</Link>
+              <Link href="/nearby">내 주변 검색</Link>
+              <Link href="/lotto-first">전국 1등 순위</Link>
+              <Link href="/regions">지역별 순위</Link>
+              <Link href="/guide/lotto-first-prize-shop">이용 안내</Link>
+            </nav>
+          </div>
+        </header>
         {children}
         <Script src="https://wcs.pstatic.net/wcslog.js" strategy="afterInteractive" />
         <Script id="naver-analytics" strategy="afterInteractive">

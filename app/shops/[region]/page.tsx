@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "../../../lib/supabase/server";
 import { getLotteryRegion, LOTTERY_REGIONS } from "../../../lib/map/regions";
+import { getMunicipalities } from "../../../lib/map/municipalities";
 
 export const revalidate = 3600;
 export const dynamicParams = false;
@@ -37,8 +38,8 @@ export async function generateMetadata({ params }: RegionPageProps): Promise<Met
   const { region: slug } = await params;
   const region = getLotteryRegion(slug);
   if (!region) return {};
-  const title = `${region.name} 로또 명당과 1등·2등 당첨 판매점`;
-  const description = `${region.name} 지역 로또 1등·2등 당첨 판매점의 당첨 횟수, 주소와 최근 당첨 회차를 확인하세요.`;
+  const title = `${region.name} 로또 1등 판매점 · 명당 순위`;
+  const description = `${region.name}에서 역대 로또 1등을 가장 많이 배출한 판매점을 실제 1등 당첨 건수 순으로 확인하세요. 2등 실적과 주소도 함께 제공합니다.`;
   return {
     title,
     description,
@@ -62,8 +63,9 @@ async function getRegionShops(regionName: string) {
       .from("shop_stats")
       .select("shop_id,first_win_count,second_win_count,total_win_count,last_win_round,shops!inner(id,name,address,phone,latitude,longitude,region)")
       .eq("shops.region", regionName)
-      .order("total_win_count", { ascending: false })
+      .gt("first_win_count", 0)
       .order("first_win_count", { ascending: false })
+      .order("second_win_count", { ascending: false })
       .order("last_win_round", { ascending: false, nullsFirst: false })
       .order("shop_id", { ascending: true })
       .limit(30),
@@ -89,7 +91,9 @@ export default async function RegionShopsPage({ params }: RegionPageProps) {
   const { region: slug } = await params;
   const region = getLotteryRegion(slug);
   if (!region) notFound();
-  const { shops, count } = await getRegionShops(region.name);
+  const [{ shops, count }, municipalities] = await Promise.all([
+    getRegionShops(region.name), getMunicipalities(region.slug),
+  ]);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -118,12 +122,13 @@ export default async function RegionShopsPage({ params }: RegionPageProps) {
       </nav>
       <header className="region-hero">
         <p className="eyebrow">LOTTO PLACE · {region.name.toUpperCase()}</p>
-        <h1>{region.name} 로또 명당</h1>
-        <p>{region.name} 지역의 로또 1등·2등 당첨 판매점 <strong>{count.toLocaleString()}곳</strong>을 확인하세요.</p>
+        <h1>{region.name} 로또 1등 판매점 · 로또 명당 순위</h1>
+        <p>{region.name}에서 역대 로또 1등을 많이 배출한 판매점을 확인하세요. 등록된 1·2등 당첨 판매점은 <strong>{count.toLocaleString()}곳</strong>입니다.</p>
+        {shops[0] && <p className="region-summary">1등 당첨 기록이 가장 많은 판매점은 {shops[0].name === "-" ? "상호명 미등록 판매점" : shops[0].name}이며, 역대 {shops[0].shop_stats.first_win_count}건의 1등 당첨 이력이 있습니다.</p>}
       </header>
       <section className="region-ranking" aria-labelledby="ranking-title">
         <div className="region-heading">
-          <div><p className="eyebrow">WINNING RECORDS</p><h2 id="ranking-title">당첨 실적 상위 판매점</h2></div>
+          <div><p className="eyebrow">FIRST PRIZE RECORDS</p><h2 id="ranking-title">1등 당첨 실적 상위 판매점</h2></div>
           <span>최대 30곳</span>
         </div>
         <ol>
@@ -143,6 +148,10 @@ export default async function RegionShopsPage({ params }: RegionPageProps) {
           ))}
         </ol>
       </section>
+      {municipalities.length > 0 && <nav className="region-links" aria-label={`${region.name} 시군구별 순위`}>
+        <h2>{region.name} 시·군·구별 1등 판매점</h2>
+        <div>{municipalities.map((item) => <Link key={item.slug} href={`/shops/${region.slug}/${encodeURIComponent(item.slug)}`}>{item.name}</Link>)}</div>
+      </nav>}
       <nav className="region-links" aria-label="다른 지역 당첨 판매점">
         <h2>다른 지역 보기</h2>
         <div>{LOTTERY_REGIONS.map((item) => <Link key={item.slug} href={`/shops/${item.slug}`} aria-current={item.slug === region.slug ? "page" : undefined}>{item.name}</Link>)}</div>

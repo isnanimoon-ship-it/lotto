@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLotteryRegion, LOTTERY_REGIONS } from "../../../lib/map/regions";
 import { getShopDetail, parseShopId, type ShopDetailWin } from "../../../lib/map/shop-detail";
+import { getMunicipalities } from "../../../lib/map/municipalities";
+import { ShopLocationMap } from "../../../components/shop-location-map";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -59,6 +61,12 @@ export default async function ShopDetailPage({ params }: ShopPageProps) {
   const firstRounds = roundsByRank(wins, 1);
   const secondRounds = roundsByRank(wins, 2);
   const region = LOTTERY_REGIONS.find((item) => item.name === shop.region);
+  const municipalityItem = region && shop.city
+    ? (await getMunicipalities(region.slug)).find((item) => item.name === shop.city)
+    : null;
+  const municipality = region && municipalityItem
+    ? { name: municipalityItem.name, href: `/shops/${region.slug}/${encodeURIComponent(municipalityItem.slug)}` }
+    : null;
   const naverMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(shop.address)}`;
   const structuredData = {
     "@context": "https://schema.org",
@@ -79,7 +87,8 @@ export default async function ShopDetailPage({ params }: ShopPageProps) {
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "로또 플레이스", item: "https://lotto.konly.co.kr/" },
           ...(region ? [{ "@type": "ListItem", position: 2, name: `${region.name} 로또 명당`, item: `https://lotto.konly.co.kr/shops/${region.slug}` }] : []),
-          { "@type": "ListItem", position: region ? 3 : 2, name },
+          ...(municipality ? [{ "@type": "ListItem", position: 3, name: municipality.name, item: `https://lotto.konly.co.kr${municipality.href}` }] : []),
+          { "@type": "ListItem", position: municipality ? 4 : region ? 3 : 2, name },
         ],
       },
     ],
@@ -88,7 +97,7 @@ export default async function ShopDetailPage({ params }: ShopPageProps) {
   const RoundList = ({ title, rank, rounds }: { title: string; rank: 1 | 2; rounds: Array<{ round: number; count: number }> }) => (
     <section className="shop-win-history" aria-labelledby={`rank-${rank}-title`}>
       <div><h2 id={`rank-${rank}-title`}>{title}</h2><span>{rank === 1 ? shop.shop_stats.first_win_count : shop.shop_stats.second_win_count}건</span></div>
-      {rounds.length ? <ol>{rounds.map(({ round, count }) => <li key={round}><strong>{round}회</strong>{count > 1 && <em>{count}건</em>}</li>)}</ol> : <p>당첨 이력이 없습니다.</p>}
+      {rounds.length ? <ol>{rounds.map(({ round, count }) => <li key={round}><strong><Link href={`/round/${round}`}>{round}회</Link></strong>{count > 1 && <em>{count}건</em>}</li>)}</ol> : <p>당첨 이력이 없습니다.</p>}
     </section>
   );
 
@@ -98,22 +107,27 @@ export default async function ShopDetailPage({ params }: ShopPageProps) {
       <nav className="shop-breadcrumb" aria-label="현재 위치">
         <Link href="/">로또 플레이스</Link><span>›</span>
         {region && <><Link href={`/shops/${region.slug}`}>{region.name}</Link><span>›</span></>}
+        {municipality && <><Link href={municipality.href}>{municipality.name}</Link><span>›</span></>}
         <span aria-current="page">{name}</span>
       </nav>
       <header className="shop-detail-hero">
         <p className="eyebrow">LOTTO WINNING SHOP</p>
         <h1>{name}</h1>
         <address>{shop.address}</address>
-        <div className="shop-detail-actions">
-          <a href={naverMapUrl} target="_blank" rel="noopener noreferrer">네이버 지도에서 보기</a>
-          {region && <Link href={`/shops/${region.slug}`}>{region.name} 판매점 더 보기</Link>}
-        </div>
+        {region && <div className="shop-detail-actions"><Link href={`/shops/${region.slug}`}>{region.name} 판매점 더 보기</Link></div>}
       </header>
       <section className="shop-summary" aria-label="당첨 통계">
         <div><span>1등 당첨</span><strong>{shop.shop_stats.first_win_count}</strong><small>건</small></div>
         <div><span>2등 당첨</span><strong>{shop.shop_stats.second_win_count}</strong><small>건</small></div>
         <div><span>전체 당첨</span><strong>{shop.shop_stats.total_win_count}</strong><small>건</small></div>
         <div><span>최근 당첨</span><strong>{shop.shop_stats.last_win_round ?? "-"}</strong><small>{shop.shop_stats.last_win_round ? "회" : ""}</small></div>
+      </section>
+      <section className="shop-location-section" aria-labelledby="shop-location-title">
+        <div className="shop-location-heading">
+          <div><h2 id="shop-location-title">판매점 위치</h2><p>{shop.address}</p></div>
+          <a href={naverMapUrl} target="_blank" rel="noopener noreferrer">네이버 지도에서 보기 →</a>
+        </div>
+        <ShopLocationMap name={name} address={shop.address} latitude={shop.latitude} longitude={shop.longitude} />
       </section>
       <div className="shop-history-grid">
         <RoundList title="1등 당첨 회차" rank={1} rounds={firstRounds} />

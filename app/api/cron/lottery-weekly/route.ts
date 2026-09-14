@@ -32,7 +32,11 @@ export async function GET(request: Request) {
   try {
     const result = await runWeeklyLotteryUpdate();
     if (result.status === "updated") {
+      revalidatePath("/");
+      revalidatePath("/lotto-first");
       revalidatePath("/shops/[region]", "page");
+      revalidatePath("/shops/[region]/[municipality]", "page");
+      revalidatePath("/round/[round]", "page");
       revalidatePath("/shop/[id]", "page");
       revalidatePath("/sitemap.xml");
     }
