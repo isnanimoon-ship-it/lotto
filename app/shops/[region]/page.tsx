@@ -6,7 +6,7 @@ import { getLotteryRegion, LOTTERY_REGIONS } from "../../../lib/map/regions";
 import { getMunicipalities } from "../../../lib/map/municipalities";
 
 export const revalidate = 3600;
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 type RegionPageProps = PageProps<"/shops/[region]">;
 
@@ -31,7 +31,8 @@ type RegionRankingRow = RegionShop["shop_stats"] & {
 };
 
 export function generateStaticParams() {
-  return LOTTERY_REGIONS.map(({ slug }) => ({ region: slug }));
+  // Build-time Supabase failures must not prevent deployment. Generate each region on first request.
+  return [];
 }
 
 export async function generateMetadata({ params }: RegionPageProps): Promise<Metadata> {
@@ -70,8 +71,28 @@ async function getRegionShops(regionName: string) {
       .order("shop_id", { ascending: true })
       .limit(30),
   ]);
-  if (countResult.error) throw new Error(`Could not count ${regionName} shops: ${countResult.error.message}`);
-  if (rankingResult.error) throw new Error(`Could not rank ${regionName} shops: ${rankingResult.error.message}`);
+  if (countResult.error) {
+    console.error("Region shop count failed", {
+      region: regionName,
+      status: countResult.status,
+      code: countResult.error.code,
+      message: countResult.error.message,
+      details: countResult.error.details,
+      hint: countResult.error.hint,
+    });
+    throw new Error(`Could not count ${regionName} shops`);
+  }
+  if (rankingResult.error) {
+    console.error("Region shop ranking failed", {
+      region: regionName,
+      status: rankingResult.status,
+      code: rankingResult.error.code,
+      message: rankingResult.error.message,
+      details: rankingResult.error.details,
+      hint: rankingResult.error.hint,
+    });
+    throw new Error(`Could not rank ${regionName} shops`);
+  }
   const shops = ((rankingResult.data ?? []) as unknown as RegionRankingRow[]).map((row) => {
     const shop = Array.isArray(row.shops) ? row.shops[0] : row.shops;
     return {
