@@ -36,6 +36,7 @@ button, select, input { font:inherit; }
 .shop-card b, .shop-card em { padding:4px 7px; border-radius:7px; background:#edf6f1; color:var(--green); font-size:11px; font-style:normal; }
 .shop-card .shop-distance { padding:4px 7px; border-radius:7px; background:#eaf3fb; color:#176ba5; font-size:11px; font-style:normal; font-weight:800; white-space:nowrap; }
 .shop-card em { margin-left:auto; background:#f0f1ed; color:#505a55; }
+.mobile-shop-detail { display:none; }
 .map-stage { position:relative; isolation:isolate; min-width:0; min-height:0; }
 .map-canvas { position:absolute; z-index:0; inset:0; }
 .header-location-button { height:42px; padding:0 13px; display:flex; align-items:center; gap:5px; border:1px solid #d2dbd6; border-radius:12px; background:#fff; color:var(--ink); box-shadow:0 3px 12px #183d2a0a; font-size:13px; font-weight:800; white-space:nowrap; cursor:pointer; }
@@ -239,7 +240,7 @@ button, select, input { font:inherit; }
   .site-brand { font-size:14px; }
   .site-nav { justify-content:flex-start; gap:14px; }
   .site-nav a { font-size:12px; }
-  .map-shell { height:100dvh; min-height:0; padding:0; display:flex; flex-direction:column; overflow:hidden; }
+  .map-shell { height:auto; min-height:0; padding:0; display:flex; flex-direction:column; overflow:visible; }
   .topbar { height:auto; min-height:112px; margin:0; padding:16px; align-items:flex-start; flex-direction:column; gap:12px; }
   .topbar h2 { font-size:25px; }
   .home-hero { padding:20px 0 16px; }
@@ -256,21 +257,36 @@ button, select, input { font:inherit; }
   .guide-body { padding:12px 18px 24px; }
   .nearby-list { grid-template-columns:1fr; }
   .home-map-section { padding-top:0; }
-  .home-map-section .map-shell { height:72dvh; min-height:510px; }
+  .home-map-section .map-shell { height:auto; min-height:0; }
   .controls { width:100%; display:grid; grid-template-columns:minmax(100px,1fr) auto auto auto; }
   .address-search { grid-column:1 / -1; width:100%; }
   .address-search input { width:100%; min-width:0; }
   .controls select { width:100%; min-width:0; }
   .controls label { padding:0 9px; white-space:nowrap; }
-  .workspace { width:100%; height:auto; min-height:0; flex:1; border:0; border-radius:0; grid-template-columns:1fr; grid-template-rows:minmax(0,2fr) minmax(0,1fr); }
-  .map-stage { grid-row:1; }
+  .workspace { width:100%; height:auto; min-height:0; flex:none; overflow:visible; border:0; border-radius:0; grid-template-columns:1fr; grid-template-rows:clamp(390px,55dvh,520px) auto; }
+  .map-stage { grid-row:1; min-height:390px; }
   .header-location-button { height:42px; padding:0 9px; }
   .map-search-button { top:10px; }
-  .shop-panel { grid-row:2; min-height:0; overflow:hidden; border-right:0; border-top:1px solid var(--line); }
+  .shop-panel { grid-row:2; min-height:0; overflow:visible; border-right:0; border-top:1px solid var(--line); }
   .panel-status { min-height:48px; padding:11px 14px; }
-  .shop-list { display:block; min-height:0; overflow-x:hidden; overflow-y:auto; padding:8px; }
+  .shop-list { display:block; min-height:220px; max-height:55dvh; overflow-x:hidden; overflow-y:auto; padding:8px; overscroll-behavior:contain; }
   .shop-card { min-width:0; border:1px solid transparent; border-bottom-color:var(--line); border-radius:0; margin:0; background:#fff; }
-  .map-popup { width:225px; padding:13px; }
+  .map-popup { width:min(280px,calc(100vw - 36px)); max-height:340px; overflow-y:auto; padding:13px; }
+  .mobile-shop-detail { position:relative; display:block; margin:10px; padding:16px; border:1px solid #bcd7cb; border-radius:14px; background:#fff; box-shadow:0 7px 24px #133c2910; }
+  .mobile-shop-detail > p { margin:0 32px 5px 0; color:var(--green); font-size:10px; font-weight:800; letter-spacing:.12em; }
+  .mobile-shop-detail > strong, .mobile-shop-detail > span { display:block; }
+  .mobile-shop-detail > strong { margin-bottom:5px; font-size:18px; }
+  .mobile-shop-detail > span { color:var(--muted); font-size:12px; line-height:1.5; }
+  .mobile-shop-detail-close { position:absolute; top:10px; right:10px; width:32px; height:32px; border:0; border-radius:50%; background:#f0f3f0; color:#53605a; font-size:22px; line-height:1; cursor:pointer; }
+  .mobile-shop-detail-counts { display:flex; gap:6px; margin:12px 0 10px; }
+  .mobile-shop-detail-counts b, .mobile-shop-detail-counts em { padding:5px 7px; border-radius:7px; background:#edf6f1; color:var(--green); font-size:11px; font-style:normal; }
+  .mobile-shop-detail-counts em { margin-left:auto; background:#f0f1ed; color:#505a55; }
+  .mobile-shop-detail-history { max-height:150px; overflow-y:auto; padding-top:9px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; line-height:1.55; }
+  .mobile-shop-detail-history > div { display:grid; grid-template-columns:32px minmax(0,1fr); gap:7px; margin-bottom:7px; }
+  .mobile-shop-detail-history b { color:var(--green); }
+  .mobile-shop-detail-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:10px; }
+  .mobile-shop-detail-actions a { display:block; padding:10px 7px; border:1px solid #b8d2c6; border-radius:8px; color:var(--green); font-size:12px; font-weight:800; text-align:center; text-decoration:none; }
+  .mobile-shop-detail-actions a:last-child { border-color:var(--green); background:var(--green); color:#fff; }
   .seo-intro { padding:52px 18px 64px; }
   .seo-features { grid-template-columns:1fr; }
   .region-page { width:min(100% - 28px,1040px); padding-top:20px; }

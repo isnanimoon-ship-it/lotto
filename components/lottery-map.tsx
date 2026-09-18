@@ -48,6 +48,7 @@ function formatDistance(kilometers: number) {
 
 export function LotteryMap() {
   const mapElement = useRef<HTMLDivElement>(null);
+  const selectedDetailRef = useRef<HTMLElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<number, any>>(new Map());
   const infoWindowRef = useRef<any>(null);
@@ -67,6 +68,9 @@ export function LotteryMap() {
   const autoSearchNextIdleRef = useRef(false);
   const [shops, setShops] = useState<MapShop[]>([]);
   const [selected, setSelected] = useState<MapShop | null>(null);
+  const [selectedWins, setSelectedWins] = useState<ShopWin[] | null>(null);
+  const [selectedWinsLoading, setSelectedWinsLoading] = useState(false);
+  const [selectedWinsError, setSelectedWinsError] = useState(false);
   const [status, setStatus] = useState("지도를 준비하는 중...");
   const [loading, setLoading] = useState(false);
   const [first, setFirst] = useState(true);
@@ -104,6 +108,22 @@ export function LotteryMap() {
       .map((shop) => ({ shop, distance: null }));
   }, [first, second, shops, userLocation]);
 
+  const mobileDirectionsUrl = useMemo(() => {
+    if (!selected) return "#";
+    const params = new URLSearchParams({
+      dlat: String(selected.lat),
+      dlng: String(selected.lng),
+      dname: selected.name,
+      appname: "https://lotto.konly.co.kr",
+    });
+    if (userLocation) {
+      params.set("slat", String(userLocation.lat));
+      params.set("slng", String(userLocation.lng));
+      params.set("sname", "현재 위치");
+    }
+    return `nmap://route/public?${params.toString()}`;
+  }, [selected, userLocation]);
+
   const popupContent = useCallback((shop: MapShop, history: string) => {
     const current = userLocationRef.current;
     const routeParams = new URLSearchParams({
@@ -138,6 +158,7 @@ export function LotteryMap() {
 
   const openShopPopup = useCallback(async (shop: MapShop, marker: any) => {
     if (!mapRef.current) return;
+    const mobileLayout = window.matchMedia("(max-width: 760px)").matches;
     if (!infoWindowRef.current) {
       infoWindowRef.current = new naver.maps.InfoWindow({
         borderWidth: 0,
@@ -147,13 +168,25 @@ export function LotteryMap() {
       });
     }
     const cached = winsCacheRef.current.get(shop.id);
-    infoWindowRef.current.setContent(popupContent(
-      shop,
-      cached ? winHistoryHtml(cached) : '<p class="map-popup-loading">전체 당첨 회차를 불러오는 중...</p>',
-    ));
-    infoWindowRef.current.open(mapRef.current, marker);
+    setSelectedWins(cached ?? null);
+    setSelectedWinsLoading(!cached);
+    setSelectedWinsError(false);
+    if (mobileLayout) {
+      infoWindowRef.current.close();
+    } else {
+      infoWindowRef.current.setContent(popupContent(
+        shop,
+        cached ? winHistoryHtml(cached) : '<p class="map-popup-loading">전체 당첨 회차를 불러오는 중...</p>',
+      ));
+      infoWindowRef.current.open(mapRef.current, marker);
+    }
     selectedRef.current = shop;
     setSelected(shop);
+    if (mobileLayout) {
+      window.setTimeout(() => {
+        selectedDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 0);
+    }
     if (cached) return;
 
     winsRequestRef.current?.abort();
@@ -165,15 +198,21 @@ export function LotteryMap() {
       const result = (await response.json()) as ShopWinsResponse;
       winsCacheRef.current.set(shop.id, result.wins);
       if (selectedRef.current?.id === shop.id) {
-        infoWindowRef.current?.setContent(popupContent(shop, winHistoryHtml(result.wins)));
+        setSelectedWins(result.wins);
+        setSelectedWinsLoading(false);
+        if (!mobileLayout) infoWindowRef.current?.setContent(popupContent(shop, winHistoryHtml(result.wins)));
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       console.error("Failed to load shop wins", error);
       if (selectedRef.current?.id === shop.id) {
-        infoWindowRef.current?.setContent(
-          popupContent(shop, '<p class="map-popup-error">당첨 회차를 불러오지 못했습니다.</p>'),
-        );
+        setSelectedWinsLoading(false);
+        setSelectedWinsError(true);
+        if (!mobileLayout) {
+          infoWindowRef.current?.setContent(
+            popupContent(shop, '<p class="map-popup-error">당첨 회차를 불러오지 못했습니다.</p>'),
+          );
+        }
       }
     }
   }, [popupContent]);
@@ -479,6 +518,36 @@ export function LotteryMap() {
       <section className="workspace">
         <aside className="shop-panel">
           <div className="panel-status"><span>{status}</span>{loading && <i aria-label="로딩 중" />}</div>
+          {selected && (
+            <article ref={selectedDetailRef} className="mobile-shop-detail" aria-live="polite">
+              <button type="button" className="mobile-shop-detail-close" aria-label="판매점 상세 닫기" onClick={() => {
+                infoWindowRef.current?.close();
+                selectedRef.current = null;
+                setSelected(null);
+                setSelectedWins(null);
+              }}>×</button>
+              <p>선택한 판매점</p>
+              <strong>{selected.name}</strong>
+              <span>{selected.address}</span>
+              <div className="mobile-shop-detail-counts">
+                <b>1등 {selected.firstWinCount}건</b>
+                <b>2등 {selected.secondWinCount}건</b>
+                <em>총 {selected.totalWinCount}건</em>
+              </div>
+              <div className="mobile-shop-detail-history">
+                {selectedWinsLoading && <span>전체 당첨 회차를 불러오는 중...</span>}
+                {selectedWinsError && <span>당첨 회차를 불러오지 못했습니다.</span>}
+                {selectedWins && <>
+                  <div><b>1등</b><span>{selectedWins.filter((win) => win.rank === 1).map((win) => `${win.round}회`).join(", ") || "없음"}</span></div>
+                  <div><b>2등</b><span>{selectedWins.filter((win) => win.rank === 2).map((win) => `${win.round}회`).join(", ") || "없음"}</span></div>
+                </>}
+              </div>
+              <div className="mobile-shop-detail-actions">
+                <a href={`/shop/${selected.id}`}>판매점 상세 페이지</a>
+                <a href={mobileDirectionsUrl}>네이버 지도 길찾기</a>
+              </div>
+            </article>
+          )}
           <div className="shop-list">
             {displayedShops.map(({ shop, distance }) => (
               <button key={shop.id} className={selected?.id === shop.id ? "shop-card selected" : "shop-card"} onClick={() => {
